@@ -1,0 +1,44 @@
+import hashlib
+import secrets
+
+class AviatorGame:
+    def __init__(self, client_seed, server_seed=None):
+        """
+        Initializes the game with client and server seeds. If no server seed is provided,
+        it generates one cryptographically securely.
+        """
+        self.client_seed = client_seed
+        self.server_seed = server_seed or self.generate_server_seed()
+        self.nonce = 1  # Start at 1 and increment per round
+
+    def generate_server_seed(self):
+        """Generate a cryptographically secure server seed"""
+        return secrets.token_hex(16)  # 128-bit secure random hex
+
+    def generate_random_number(self, nonce):
+        """Generate a cryptographically secure random number based on the client seed, server seed, and nonce"""
+        combined_seed = f'{self.client_seed}-{self.server_seed}-{nonce}'.encode('utf-8')
+        hash_result = hashlib.sha256(combined_seed).hexdigest()
+        random_value = int(hash_result, 16) / 2**256
+        return random_value
+
+    def calculate_multiplier(self):
+        """Calculate the flight multiplier for the game"""
+        random_value = self.generate_random_number(self.nonce)
+        multiplier = 1 + random_value * 10  # Range from 1x to ~11x
+        return round(multiplier, 2)
+
+    def play_round(self):
+        """Simulate playing a round in the Aviator game"""
+        multiplier = self.calculate_multiplier()
+        print(f"Round: {self.nonce}, Server Seed: {self.server_seed}, Client Seed: {self.client_seed}, Multiplier: {multiplier}x")
+        self.nonce += 1
+        return multiplier
+
+# Example usage
+client_seed = "user_seed_1234"
+game = AviatorGame(client_seed)
+
+# Simulate 5 rounds
+for _ in range(5):
+    game.play_round()
